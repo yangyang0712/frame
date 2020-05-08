@@ -1,0 +1,4 @@
+mysql_server = 127.0.0.1
+mysql_username = homestead
+mysql_password = secret
+mysql_database = new_test
