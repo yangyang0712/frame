@@ -7,24 +7,26 @@ class DB
     public $username;
     public $password;
     public $database;
+    public $table = "";
 
     public function __construct($host = null, $username = null, $password = null, $database = null)
     {
-//        try {
-//            $this->mysql = new mysqli(
-//                db('mysql_server', $host),
-//                db('mysql_username', $username),
-//                db('mysql_password', $password),
-//                db('mysql_database', $database)
-//            );
-//        } catch (PDOException $e) {
-//            echo $e->getMessage();
-//        }
+        try {
+            $this->mysql = new mysqli(
+                db('mysql_server', $host),
+                db('mysql_username', $username),
+                db('mysql_password', $password),
+                db('mysql_database', $database)
+            );
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+        }
     }
 
     public function table($table)
     {
-        return $table;
+        $this->table = $table;
+        return $this;
     }
 
     private function ternary($sting = "*")
@@ -44,13 +46,39 @@ class DB
         foreach ($where as $value) {
             $data[] = $value;
         }
-        $this->where = $this->adorn($data);
+        $this->where[] = $this->adorn($data);
         return $this;
     }
 
     private function adorn($value)
     {
-        dd($value);
-        return $this;
+        $where = "";
+        $array = ["!=", ">", "<"];
+        foreach ($value as $k => $item) {
+            if ($k == 1) {
+                if (in_array($item, $array)) {
+                    $where .= $item;
+                } else {
+                    $where .= "=" . $item;
+                }
+            } else {
+                $where .= $item;
+            }
+        }
+        return $where;
+    }
+
+    public function get()
+    {
+        $select = isset($this->select) ? $this->select : "*";
+        $where = isset($this->where) ? implode(' and ', $this->where) : 1;
+        $select = "SELECT $select FROM $this->table WHERE $where";
+        $this->data = mysqli_query($this->mysql, $select);
+        $data = [];
+        while($row = mysqli_fetch_array($this->data)){
+            $data [] = $row['title'];
+        }
+        dd($data);
+        return $this->data;
     }
 }
